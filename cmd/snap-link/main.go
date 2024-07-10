@@ -2,15 +2,18 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/velvetriddles/snap-link/internal/config"
+	"github.com/velvetriddles/snap-link/internal/http-server/handlers/urls/save"
+	mwLogger "github.com/velvetriddles/snap-link/internal/http-server/middleware/logger"
 	"github.com/velvetriddles/snap-link/internal/lib/logger/handlers/slogpretty"
 	"github.com/velvetriddles/snap-link/internal/lib/logger/sl"
 	"github.com/velvetriddles/snap-link/internal/storage/sqlite"
-	slog "golang.org/x/exp/slog"
+	"golang.org/x/exp/slog"
 )
 
 const (
@@ -27,7 +30,7 @@ func main() {
 	log.Debug("Debugging snap-link service")
 	log.Error("error messages are enabled")
 
-	_, err := sqlite.New(cfg.StoragePath)
+	storage, err := sqlite.New(cfg.StoragePath)
 
 	// fmt.Println(cfg.StoragePath)
 	if err != nil {
@@ -40,9 +43,25 @@ func main() {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Recoverer)
 
+	router.Post("/url", save.New(log, storage))
+	log.Info("starting server", slog.String("addres", cfg.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HTTPServer.Timeout,
+		WriteTimeout: cfg.HTTPServer.Timeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("failed to start server")
+	}
+	log.Error("server stopped")
 }
 
 func setupLogger(env string) *slog.Logger {

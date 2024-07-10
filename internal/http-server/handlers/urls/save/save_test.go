@@ -18,40 +18,46 @@ import (
 
 func TestSaveHandler(t *testing.T) {
 	cases := []struct {
-		name      string
-		alias     string
-		url       string
-		respError string
-		mockError error
+		name               string
+		alias              string
+		url                string
+		respError          string
+		mockError          error
+		expectedStatusCode int 
 	}{
 		{
-			name:  "Success",
-			alias: "test_alias",
-			url:   "https://google.com",
+			name:               "Success",
+			alias:              "test_alias",
+			url:                "https://google.com",
+			expectedStatusCode: http.StatusOK, 
 		},
 		{
-			name:  "Empty alias",
-			alias: "",
-			url:   "https://google.com",
+			name:               "Empty alias",
+			alias:              "",
+			url:                "https://google.com",
+			expectedStatusCode: http.StatusOK, 
 		},
 		{
-			name:      "Empty URL",
-			url:       "",
-			alias:     "some_alias",
-			respError: "field URL is a required field",
+			name:               "Empty URL",
+			url:                "",
+			alias:              "some_alias",
+			respError:          "field URL is a required field",
+			expectedStatusCode: http.StatusOK,
 		},
 		{
-			name:      "Invalid URL",
-			url:       "some invalid URL",
-			alias:     "some_alias",
-			respError: "field URL is not a valid URL",
+			name:               "Invalid URL",
+			url:                "some invalid URL",
+			alias:              "some_alias",
+			respError:          "field URL is not a valid URL",
+			expectedStatusCode: http.StatusOK, 
 		},
 		{
-			name:      "SaveURL Error",
-			alias:     "test_alias",
-			url:       "https://google.com",
-			respError: "failed to add url",
-			mockError: errors.New("unexpected error"),
+			name:               "SaveURL Error",
+			alias:              "test_alias",
+			url:                "https://google.com",
+			respError:          "failed to add URL",
+			mockError:          errors.New("unexpected error"),
+			expectedStatusCode: http.StatusOK, 
 		},
 	}
 
@@ -89,7 +95,17 @@ func TestSaveHandler(t *testing.T) {
 
 			require.Equal(t, tc.respError, resp.Error)
 
-			// TODO: add more checks
+			require.Equal(t, tc.expectedStatusCode, rr.Code)
+
+			// Проверяем, что тело ответа не пустое
+			require.NotEmpty(t, body)
+
+			if tc.respError != "" {
+				require.NotEmpty(t, resp.Error)
+			} else {
+				require.Empty(t, resp.Error)
+			}
+
 		})
 	}
 }

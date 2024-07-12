@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/velvetriddles/snap-link/internal/config"
+	"github.com/velvetriddles/snap-link/internal/http-server/handlers/redirect"
 	"github.com/velvetriddles/snap-link/internal/http-server/handlers/urls/save"
 	mwLogger "github.com/velvetriddles/snap-link/internal/http-server/middleware/logger"
 	"github.com/velvetriddles/snap-link/internal/lib/logger/handlers/slogpretty"
@@ -47,7 +48,13 @@ func main() {
 	router.Use(middleware.URLFormat)
 	router.Use(middleware.Recoverer)
 
+	router.Route("/url", func(r chi.Router) {
+		r.Use(middleware.BasicAuth("snap-link", map[string]string{
+			cfg.HTTPServer.User: cfg.HTTPServer.Password,
+		}))
+	})
 	router.Post("/url", save.New(log, storage))
+	router.Get("/{alias}", redirect.New(log, storage))
 	log.Info("starting server", slog.String("addres", cfg.Address))
 
 	srv := &http.Server{

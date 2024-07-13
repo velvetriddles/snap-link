@@ -126,7 +126,3 @@ Redirects the user to the original URL.
 ## Contributing
 
 We welcome contributions to the project! Please follow standard fork and pull request processes, and provide detailed descriptions of your changes.
-
-## License
-
-This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for details.

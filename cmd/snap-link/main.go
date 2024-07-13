@@ -52,10 +52,10 @@ func main() {
 		r.Use(middleware.BasicAuth("snap-link", map[string]string{
 			cfg.HTTPServer.User: cfg.HTTPServer.Password,
 		}))
+		r.Post("/", save.New(log, storage)) // Переместили маршрут внутрь подмаршрута
 	})
-	router.Post("/url", save.New(log, storage))
 	router.Get("/{alias}", redirect.New(log, storage))
-	log.Info("starting server", slog.String("addres", cfg.Address))
+	log.Info("starting server", slog.String("address", cfg.Address))
 
 	srv := &http.Server{
 		Addr:         cfg.Address,

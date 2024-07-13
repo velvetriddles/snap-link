@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	host = "localhost:8080"
+	host = "localhost:8081"
 )
 
 func TestURLShortener_HappyPath(t *testing.T) {
@@ -79,7 +79,7 @@ func TestURLShortener_SaveRedirect(t *testing.T) {
 					URL:   tc.url,
 					Alias: tc.alias,
 				}).
-				WithBasicAuth("myuser", "mypass").
+				WithBasicAuth("admin", "admin").
 				Expect().Status(http.StatusOK).
 				JSON().Object()
 
